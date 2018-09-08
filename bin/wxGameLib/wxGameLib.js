@@ -163,7 +163,7 @@ var wxgame;
                                 showMessageCard: true,
                                 sendMessageTitle: title,
                                 sendMessagePath: "",
-                                sendMessageImg: imgUrl + wxgame.Utils.getVersionControlCode(),
+                                sendMessageImg: imgUrl.match(/https/ig).length > 0 ? imgUrl + wxgame.Utils.getVersionControlCode() : imgUrl,
                                 success: function (res) { resolve(res); },
                                 fail: function (err) { reject(err); }
                             });
@@ -476,8 +476,8 @@ var wxgame;
                     shareVo.opType = Cmd.ShareOpType.share;
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.shareAppMessage({
-                                title: shareVo.title,
-                                imageUrl: shareVo.shareImageUrl + wxgame.Utils.getVersionControlCode(),
+                                title: title,
+                                imageUrl: imageUrl.match(/https/ig).length > 0 ? imageUrl + wxgame.Utils.getVersionControlCode() : imageUrl,
                                 query: query,
                                 success: function (res) {
                                     if (success)
