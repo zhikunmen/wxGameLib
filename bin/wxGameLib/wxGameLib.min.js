@@ -18,6 +18,14 @@ var wxgame;
         return envVersionConst;
     }());
     wxgame.envVersionConst = envVersionConst;
+    var CustomerServiceConst = /** @class */ (function () {
+        function CustomerServiceConst() {
+        }
+        /**跳转客服默认标题 */
+        CustomerServiceConst.DEFAULTTITLE = "回复\"关注\"获取关注链接";
+        return CustomerServiceConst;
+    }());
+    wxgame.CustomerServiceConst = CustomerServiceConst;
 })(wxgame || (wxgame = {}));
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -145,16 +153,17 @@ var wxgame;
             });
         };
         /**跳转客服回话 */
-        Global.prototype.openCustomerServiceConversation = function () {
+        Global.prototype.openCustomerServiceConversation = function (showCard, title, imgUrl) {
+            if (title === void 0) { title = wxgame.CustomerServiceConst.DEFAULTTITLE; }
             return __awaiter(this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.openCustomerServiceConversation({
                                 sessionFrom: "",
                                 showMessageCard: true,
-                                sendMessageTitle: "好彩跑得快",
+                                sendMessageTitle: title,
                                 sendMessagePath: "",
-                                sendMessageImg: "https://wx.qlogo.cn/mmopen/vi_32/etCUHvzICyicwibVgJw0bn1p9zExsBHBCQicpjTNwVXpGtnG3TVTz2w7Rq0QDibVEYMUNULXwf3wn1Mna75xbAehhw/132",
+                                sendMessageImg: imgUrl + wxgame.Utils.getVersionControlCode(),
                                 success: function (res) { resolve(res); },
                                 fail: function (err) { reject(err); }
                             });
@@ -468,7 +477,7 @@ var wxgame;
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.shareAppMessage({
                                 title: shareVo.title,
-                                imageUrl: shareVo.shareImageUrl,
+                                imageUrl: shareVo.shareImageUrl + wxgame.Utils.getVersionControlCode(),
                                 query: query,
                                 success: function (res) {
                                     if (success)
@@ -591,6 +600,10 @@ var wxgame;
                     console.log("showModal调用失败");
                 }
             });
+        };
+        /**时间戳 做版本控制 */
+        Utils.getVersionControlCode = function () {
+            return "?v=" + new Date().getTime();
         };
         return Utils;
     }());

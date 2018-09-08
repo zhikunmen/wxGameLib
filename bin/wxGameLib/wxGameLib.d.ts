@@ -13,6 +13,10 @@ declare module wxgame {
         /**正式版 */
         static RELEASE: string;
     }
+    class CustomerServiceConst {
+        /**跳转客服默认标题 */
+        static DEFAULTTITLE: string;
+    }
 }
 
 declare module wxgame {
@@ -37,7 +41,7 @@ declare module wxgame {
         /**退出当前小游戏 */
         exitMiniProgram(success?: Function, fail?: Function, complete?: Function): Promise<any>;
         /**跳转客服回话 */
-        openCustomerServiceConversation(): Promise<{}>;
+        openCustomerServiceConversation(showCard: boolean, title?: string, imgUrl?: string): Promise<{}>;
         /**打开同一公众号下关联的另一个小程序 */
         navigateToMiniProgram(appid: string, path?: string, extraData?: any, envVersion?: string): Promise<{}>;
     }
@@ -115,5 +119,7 @@ declare module wxgame {
     class Utils {
         /**弹框 */
         static showConfirm(info: string, title?: string, oktxt?: string, okFunc?: Function, caltxt?: string, calFunc?: Function): void;
+        /**时间戳 做版本控制 */
+        static getVersionControlCode(): string;
     }
 }
