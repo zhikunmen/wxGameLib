@@ -1,6 +1,6 @@
 /*!
  * wxGameLib - d.ts for Description
- * @licence wxGameLib - v0.1.0 (2018-09-08)
+ * @licence wxGameLib - v0.1.0 (2018-09-12)
  * qq:93749937 | Licence: helojo
  */
 declare module wxgame {
@@ -26,18 +26,13 @@ declare module wxgame {
         secret: string;
         private userInfoData;
         tableLobbyGameList: table.TableLobbyGameList;
+        shareIconUrl: string;
         static readonly instance: Global;
         /**
          * @param appId 小游戏appid
          * @param secret 小游戏秘钥
          */
         init(): Promise<any>;
-        /**获取用户消息 例如头像 昵称等 */
-        getUserInfo(): Promise<any>;
-        /**
-         * @param jscode login回调成功的code
-         */
-        private getSessionKeyOpenId(jscode);
         /**退出当前小游戏 */
         exitMiniProgram(success?: Function, fail?: Function, complete?: Function): Promise<any>;
         /**跳转客服回话 */
@@ -51,7 +46,7 @@ declare module wxgame {
     class Message {
         private static _instance;
         key: Array<string>;
-        launchOption: LaunchOptions;
+        launchOption: any;
         static readonly instance: Message;
         init(): void;
         /**
@@ -62,7 +57,7 @@ declare module wxgame {
         private addOnShowEvent();
         private _rankBit;
         /**设置用户数据上报 */
-        setUserCloudStorage(KVDataList: Array<KVData>): Promise<{}>;
+        setUserCloudStorage(KVDataList: Array<any>): Promise<{}>;
     }
 }
 
@@ -95,10 +90,8 @@ declare module wxgame {
         /**更新转发属性 */
         updateShareMenu(ticket: any): Promise<any>;
         /**
-         * 消息分享
-         * @param title 分享标题
-         * @param imageUrl 分享图片url
-         * @param query 查询字符串 从这条转发消息进入后，可通过 wx.getLaunchInfoSync() 或 wx.onShow() 获取启动参数中的 query。
+         * 消息分享 如果写死分享的话务必填写shareVo.title和shareVo.shareImageUrl
+         * @param shareVo 分享数据
          */
         shareAppMessage(shareVo: uniLib.WXShareVo, success?: Function, fail?: Function): Promise<any>;
         /**
@@ -121,5 +114,7 @@ declare module wxgame {
         static showConfirm(info: string, title?: string, oktxt?: string, okFunc?: Function, caltxt?: string, calFunc?: Function): void;
         /**时间戳 做版本控制 */
         static getVersionControlCode(): string;
+        /**检查当前是否是微信小游戏 不能导致h5上报错 */
+        static readonly isWxGame: boolean;
     }
 }

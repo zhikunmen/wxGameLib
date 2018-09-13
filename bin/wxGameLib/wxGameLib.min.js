@@ -1,6 +1,6 @@
 /*!
  * wxGameLib - JS for Debug
- * @licence wxGameLib - v0.1.0 (2018-09-08)
+ * @licence wxGameLib - v0.1.0 (2018-09-12)
  * qq:93749937 | Licence: helojo
  */
 var wxgame;
@@ -84,7 +84,10 @@ var wxgame;
         Global.prototype.init = function () {
             return __awaiter(this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
+                    if (!wxgame.Utils.isWxGame)
+                        return [2 /*return*/];
                     wxgame.Message.instance.init();
+                    wxgame.ShareMessage.instance.showShareMenu(true);
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.login({
                                 success: function (code) {
@@ -102,38 +105,12 @@ var wxgame;
                 });
             });
         };
-        /**获取用户消息 例如头像 昵称等 */
-        Global.prototype.getUserInfo = function () {
-            return __awaiter(this, void 0, void 0, function () {
-                var _this = this;
-                return __generator(this, function (_a) {
-                    return [2 /*return*/, new Promise(function (resolve, reject) {
-                            wx.getUserInfo({
-                                withCredentials: true,
-                                success: function (res) { _this.userInfoData = res; resolve(res.userInfo); },
-                                fail: function (err) { reject(err); }
-                            });
-                        })];
-                });
-            });
-        };
-        /**
-         * @param jscode login回调成功的code
-         */
-        Global.prototype.getSessionKeyOpenId = function (jscode) {
-            var wxUrl = "https://api.weixin.qq.com/sns/jscode2session?appid=" + this.appId + "&secret=" + this.secret + "&js_code=" + jscode + "&grant_type=authorization_code";
-            var req = new egret.URLRequest(wxUrl);
-            req.method = egret.URLRequestMethod.GET;
-            var loader = new egret.URLLoader(req);
-            loader.addEventListener(egret.Event.COMPLETE, function (data) {
-                console.log("getSessionKeyOpenId   ");
-                console.info(data);
-            }, this);
-        };
         /**退出当前小游戏 */
         Global.prototype.exitMiniProgram = function (success, fail, complete) {
             return __awaiter(this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
+                    if (!wxgame.Utils.isWxGame)
+                        return [2 /*return*/];
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.exitMiniProgram({
                                 success: function () {
@@ -157,13 +134,15 @@ var wxgame;
             if (title === void 0) { title = wxgame.CustomerServiceConst.DEFAULTTITLE; }
             return __awaiter(this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
+                    if (!wxgame.Utils.isWxGame)
+                        return [2 /*return*/];
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.openCustomerServiceConversation({
                                 sessionFrom: "",
                                 showMessageCard: true,
                                 sendMessageTitle: title,
                                 sendMessagePath: "",
-                                sendMessageImg: imgUrl.match(/https/ig).length > 0 ? imgUrl + wxgame.Utils.getVersionControlCode() : imgUrl,
+                                sendMessageImg: imgUrl ? (imgUrl.match(/https/ig).length > 0 ? imgUrl + wxgame.Utils.getVersionControlCode() : imgUrl) : "",
                                 success: function (res) { resolve(res); },
                                 fail: function (err) { reject(err); }
                             });
@@ -230,6 +209,8 @@ var wxgame;
             shareVo.opType = Cmd.ShareOpType.click;
             if (query.shareType)
                 shareVo.shareType = Number(query.shareType);
+            if (query.wgKvData)
+                shareVo.wgKvData = query.wgKvData;
             if (query && query.uid) {
                 shareVo.fromUid = Number(query.uid);
                 if (data.shareTicket) {
@@ -247,12 +228,14 @@ var wxgame;
                     wxgame.ShareMessage.instance.sendShareMessage(shareVo);
                 }
             }
+            this.launchOption = null;
         };
         /**监听小游戏回到前台的事件 */
         Message.prototype.addOnShowEvent = function () {
             var _this = this;
             wx.onShow(function (res) {
-                _this.launchOption = res;
+                if (!_this.launchOption)
+                    _this.launchOption = res;
                 _this.initLaunchOption();
             });
         };
@@ -293,6 +276,8 @@ var wxgame;
             configurable: true
         });
         OpenData.prototype.sendShareData = function (kvdata) {
+            if (!wxgame.Utils.isWxGame)
+                return;
             this._openDataContext = wx.getOpenDataContext();
             this._openDataContext.postMessage(kvdata); //在Message onMessage里获取
         };
@@ -430,10 +415,8 @@ var wxgame;
             });
         };
         /**
-         * 消息分享
-         * @param title 分享标题
-         * @param imageUrl 分享图片url
-         * @param query 查询字符串 从这条转发消息进入后，可通过 wx.getLaunchInfoSync() 或 wx.onShow() 获取启动参数中的 query。
+         * 消息分享 如果写死分享的话务必填写shareVo.title和shareVo.shareImageUrl
+         * @param shareVo 分享数据
          */
         ShareMessage.prototype.shareAppMessage = function (shareVo, success, fail) {
             return __awaiter(this, void 0, void 0, function () {
@@ -459,8 +442,12 @@ var wxgame;
                         imageUrl = shareVo.shareImageUrl;
                     }
                     else {
-                        if (random)
-                            imageUrl = table.newsharepicture[random];
+                        if (random && wxgame.Global.instance.shareIconUrl) {
+                            if (wxgame.Global.instance.shareIconUrl[wxgame.Global.instance.shareIconUrl.length - 1] != "/") {
+                                wxgame.Global.instance.shareIconUrl += "/";
+                            }
+                            imageUrl = wxgame.Global.instance.shareIconUrl + "shareIcons/" + table.newsharepicture[random];
+                        }
                         else
                             uniLib.TipsUtils.showTipsDownToUp("分享图片配置有误");
                     }
@@ -473,13 +460,17 @@ var wxgame;
                         if (obj && obj.roomId)
                             query += "&roomId=" + obj.roomId;
                     }
+                    if (shareVo.wgKvData) {
+                        query += "&wgKvData=" + shareVo.wgKvData;
+                    }
                     shareVo.opType = Cmd.ShareOpType.share;
                     return [2 /*return*/, new Promise(function (resolve, reject) {
                             wx.shareAppMessage({
                                 title: title,
-                                imageUrl: imageUrl.match(/https/ig).length > 0 ? imageUrl + wxgame.Utils.getVersionControlCode() : imageUrl,
+                                imageUrl: (Array.isArray(imageUrl.match(/http/ig)) && imageUrl.match(/http/ig).length > 0) ? imageUrl + wxgame.Utils.getVersionControlCode() : imageUrl,
                                 query: query,
                                 success: function (res) {
+                                    console.log(res);
                                     if (success)
                                         success();
                                     if (res) {
@@ -495,6 +486,7 @@ var wxgame;
                                             });
                                         }
                                         else {
+                                            console.log("分享的是个人");
                                             _this.sendShareMessage(shareVo);
                                         }
                                     }
@@ -535,7 +527,7 @@ var wxgame;
          * @param jsonShare 是否分享群
          *  */
         ShareMessage.prototype.sendShareMessage = function (shareVo) {
-            if (this._data) {
+            if (this._data || !shareVo) {
                 this.sendShare();
                 return;
             }
@@ -554,8 +546,8 @@ var wxgame;
             this.sendShare();
         };
         ShareMessage.prototype.sendShare = function () {
-            if (uniLib.NetMgr.ws && this._data) {
-                uniLib.NetMgr.tcpSend(this._data);
+            if (NetMgr.ws && this._data) {
+                NetMgr.tcpSend(this._data);
                 this._data = null;
             }
         };
@@ -605,6 +597,18 @@ var wxgame;
         Utils.getVersionControlCode = function () {
             return "?v=" + new Date().getTime();
         };
+        Object.defineProperty(Utils, "isWxGame", {
+            /**检查当前是否是微信小游戏 不能导致h5上报错 */
+            get: function () {
+                if (!uniLib.Global.isWxGame()) {
+                    console.warn("当前测试环境不是微信小游戏，导致功能失效");
+                    return false;
+                }
+                return true;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Utils;
     }());
     wxgame.Utils = Utils;
