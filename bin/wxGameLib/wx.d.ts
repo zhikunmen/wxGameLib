@@ -2853,7 +2853,7 @@ declare var wx: {
         fail?: Function,
         complete?: Function
     })
-    /**创建用户信息按钮 */
+    /** */
     createUserInfoButton(obj: {
         /**按钮的类型 */
         type: string,
@@ -2865,8 +2865,6 @@ declare var wx: {
         withCredentials: boolean
         lang?: string
     }): UserInfoButton
-
-    /**获取分享canvas */
 }
 
 interface LaunchOptions {
@@ -2901,7 +2899,7 @@ interface shareQuery {
     uid: number;
     shareType: number;
     roomId: number;
-    wgKvData:string;//扩展字段
+    wgShareData: string;//扩展字段
 }
 
 interface wgUserInfo {

@@ -1,6 +1,6 @@
 /*!
  * wxGameLib - JS for Debug
- * @licence wxGameLib - v0.1.0 (2018-09-12)
+ * @licence wxGameLib - v0.1.0 (2018-09-17)
  * qq:93749937 | Licence: helojo
  */
 var wxgame;
@@ -142,7 +142,7 @@ var wxgame;
                                 showMessageCard: true,
                                 sendMessageTitle: title,
                                 sendMessagePath: "",
-                                sendMessageImg: imgUrl ? (imgUrl.match(/https/ig).length > 0 ? imgUrl + wxgame.Utils.getVersionControlCode() : imgUrl) : "",
+                                sendMessageImg: imgUrl ? (imgUrl.match(/http/ig).length > 0 ? imgUrl + wxgame.Utils.getVersionControlCode() : imgUrl) : "",
                                 success: function (res) { resolve(res); },
                                 fail: function (err) { reject(err); }
                             });
@@ -165,6 +165,19 @@ var wxgame;
                                 envVersion: envVersion,
                                 success: function (res) { resolve(res); },
                                 fail: function (err) { console.error("navigateToMiniProgram fail"); reject(err); }
+                            });
+                        })];
+                });
+            });
+        };
+        /**调用设置交口 */
+        Global.prototype.openSetting = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    return [2 /*return*/, new Promise(function (resolve, reject) {
+                            wx.openSetting({
+                                success: function (res) { resolve(res); },
+                                fail: function (error) { reject(error); console.log("打开设置失败"); }
                             });
                         })];
                 });
@@ -209,8 +222,8 @@ var wxgame;
             shareVo.opType = Cmd.ShareOpType.click;
             if (query.shareType)
                 shareVo.shareType = Number(query.shareType);
-            if (query.wgKvData)
-                shareVo.wgKvData = query.wgKvData;
+            if (query.wgShareData)
+                shareVo.wgShareData = query.wgShareData;
             if (query && query.uid) {
                 shareVo.fromUid = Number(query.uid);
                 if (data.shareTicket) {
@@ -233,6 +246,7 @@ var wxgame;
         /**监听小游戏回到前台的事件 */
         Message.prototype.addOnShowEvent = function () {
             var _this = this;
+            wx.offShow(null);
             wx.onShow(function (res) {
                 if (!_this.launchOption)
                     _this.launchOption = res;
@@ -356,6 +370,18 @@ var wxgame;
             if (imageUrl === void 0) { imageUrl = ""; }
             if (query === void 0) { query = ""; }
             wx.onShareAppMessage(function (e) {
+                if (!title || title.trim() == "") {
+                    var random = void 0;
+                    var table_1 = wxgame.Global.instance.tableLobbyGameList;
+                    if (table_1 && Array.isArray(table_1.newshareContent)) {
+                        random = Math.floor(Math.random() * table_1.newshareContent.length);
+                        title = table_1.newshareContent[random];
+                        if (wxgame.Global.instance.shareIconUrl[wxgame.Global.instance.shareIconUrl.length - 1] != "/") {
+                            wxgame.Global.instance.shareIconUrl += "/";
+                        }
+                        imageUrl = wxgame.Global.instance.shareIconUrl + "shareIcons/" + table_1.newsharepicture[random];
+                    }
+                }
                 console.log("用户点击事件");
                 return {
                     title: title,
@@ -433,7 +459,7 @@ var wxgame;
                         title = shareVo.title;
                     }
                     else {
-                        if (random)
+                        if (!isNaN(random))
                             title = table.newshareContent[random];
                         else
                             uniLib.TipsUtils.showTipsDownToUp("分享标题配置有误");
@@ -442,7 +468,7 @@ var wxgame;
                         imageUrl = shareVo.shareImageUrl;
                     }
                     else {
-                        if (random && wxgame.Global.instance.shareIconUrl) {
+                        if (!isNaN(random) && wxgame.Global.instance.shareIconUrl) {
                             if (wxgame.Global.instance.shareIconUrl[wxgame.Global.instance.shareIconUrl.length - 1] != "/") {
                                 wxgame.Global.instance.shareIconUrl += "/";
                             }
@@ -460,8 +486,8 @@ var wxgame;
                         if (obj && obj.roomId)
                             query += "&roomId=" + obj.roomId;
                     }
-                    if (shareVo.wgKvData) {
-                        query += "&wgKvData=" + shareVo.wgKvData;
+                    if (shareVo.wgShareData) {
+                        query += "&wgShareData=" + shareVo.wgShareData;
                     }
                     shareVo.opType = Cmd.ShareOpType.share;
                     return [2 /*return*/, new Promise(function (resolve, reject) {
@@ -527,23 +553,77 @@ var wxgame;
          * @param jsonShare 是否分享群
          *  */
         ShareMessage.prototype.sendShareMessage = function (shareVo) {
-            if (this._data || !shareVo) {
-                this.sendShare();
-                return;
-            }
-            var req = new Cmd.UploadShareInfoLittleGameLobbyCmd_CS();
-            if (shareVo.fromUid)
-                req.uid = shareVo.fromUid;
-            if (shareVo.shareType)
-                req.shareType = shareVo.shareType;
-            if (shareVo.opType)
-                req.opType = shareVo.opType;
-            if (shareVo.shareTicket)
-                req.jsonShare = shareVo.shareTicket;
-            if (shareVo.wgKvData)
-                req.extData = shareVo.wgKvData;
-            this._data = req;
-            this.sendShare();
+            return __awaiter(this, void 0, void 0, function () {
+                var code, obj, req, obj;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.checkSession().then(function (res) { }, //未过期不做处理
+                            function (res) {
+                                wxgame.Global.instance.init().then(function (res) {
+                                    code = res;
+                                });
+                            })];
+                        case 1:
+                            _a.sent();
+                            if (this._data || !shareVo) {
+                                if (code) {
+                                    if (this._data && this._data.shareType && this._data.shareType == Cmd.ShareType.ios) {
+                                        obj = {};
+                                        if (this._data.extData) {
+                                            obj = JSON.parse(this._data.extData);
+                                            obj["code"] = code;
+                                        }
+                                        else {
+                                            obj["code"] = code;
+                                        }
+                                        this._data.extData = JSON.stringify(obj);
+                                    }
+                                }
+                                this.sendShare();
+                                return [2 /*return*/];
+                            }
+                            req = new Cmd.UploadShareInfoLittleGameLobbyCmd_CS();
+                            if (shareVo.fromUid)
+                                req.uid = shareVo.fromUid;
+                            if (shareVo.shareType)
+                                req.shareType = shareVo.shareType;
+                            if (shareVo.opType)
+                                req.opType = shareVo.opType;
+                            if (shareVo.shareTicket)
+                                req.jsonShare = shareVo.shareTicket;
+                            if (shareVo.wgKvData)
+                                req.extData = shareVo.wgKvData;
+                            if (shareVo.wgShareData)
+                                req.extData = shareVo.wgShareData;
+                            if (req.shareType && req.shareType == Cmd.ShareType.ios && code) {
+                                obj = {};
+                                if (req.extData) {
+                                    obj = JSON.parse(req.extData);
+                                    obj["code"] = code;
+                                }
+                                else {
+                                    obj["code"] = code;
+                                }
+                                req.extData = JSON.stringify(obj);
+                            }
+                            this._data = req;
+                            this.sendShare();
+                            return [2 /*return*/];
+                    }
+                });
+            });
+        };
+        ShareMessage.prototype.checkSession = function () {
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    return [2 /*return*/, new Promise(function (resolve, reject) {
+                            wx.checkSession({
+                                success: function (res) { resolve(res); },
+                                fail: function (res) { reject(res); } //登陆过期
+                            });
+                        })];
+                });
+            });
         };
         ShareMessage.prototype.sendShare = function () {
             if (NetMgr.ws && this._data) {

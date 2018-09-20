@@ -1,6 +1,6 @@
 /*!
  * wxGameLib - d.ts for Description
- * @licence wxGameLib - v0.1.0 (2018-09-12)
+ * @licence wxGameLib - v0.1.0 (2018-09-17)
  * qq:93749937 | Licence: helojo
  */
 declare module wxgame {
@@ -39,6 +39,8 @@ declare module wxgame {
         openCustomerServiceConversation(showCard: boolean, title?: string, imgUrl?: string): Promise<{}>;
         /**打开同一公众号下关联的另一个小程序 */
         navigateToMiniProgram(appid: string, path?: string, extraData?: any, envVersion?: string): Promise<{}>;
+        /**调用设置交口 */
+        openSetting(): Promise<any>;
     }
 }
 
@@ -103,7 +105,8 @@ declare module wxgame {
          * @param opType  操作类型
          * @param jsonShare 是否分享群
          *  */
-        sendShareMessage(shareVo?: uniLib.WXShareVo): void;
+        sendShareMessage(shareVo?: uniLib.WXShareVo): Promise<any>;
+        checkSession(): Promise<any>;
         private sendShare();
     }
 }
