@@ -408,6 +408,31 @@ interface PageConstructor {
 
 declare var Page: PageConstructor;
 
+declare const canvas: {
+    toTempFilePathSync(obj: {
+        x?: number,
+        y?: number,
+        width?: number,
+        height?: number,
+        destWidth?: number,
+        destHeight?: number
+        fileType?: string,
+        quality?: number;
+    }): string,
+    toTempFilePath(obj: {
+        x?: number,
+        y?: number,
+        width?: number,
+        height?: number,
+        destWidth?: number,
+        destHeight?: number
+        fileType?: string,
+        quality?: number;
+        success?: Function,
+        fail?: Function
+    })
+}
+
 declare var wx: {
     // # 网络 # 
 
@@ -2865,6 +2890,16 @@ declare var wx: {
         withCredentials: boolean
         lang?: string
     }): UserInfoButton
+
+    /**设置是否保持常亮状态 */
+    setKeepScreenOn(obj: {
+        keepScreenOn: boolean,
+        success?: Function,
+        fail?: Function,
+        complete?: Function
+    })
+    /**监听内存不足告警事件 */
+    onMemoryWarning(callback: Function);
 }
 
 interface LaunchOptions {
